@@ -1,7 +1,5 @@
-import 'package:flutter/widgets.dart';
+import 'core/bootstrap/app_bootstrap.dart';
 
-import 'app.dart';
-
-void main() {
-  runApp(const FitnessApp());
+Future<void> main() async {
+  await bootstrap();
 }
