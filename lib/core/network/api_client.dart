@@ -66,7 +66,42 @@ class ApiClient {
     );
   }
 
+  Future<void> probeStartup() async {
+    final target = Uri.parse(publicDio.options.baseUrl);
+
+    try {
+      final response = await publicDio
+          .getUri<dynamic>(
+            target,
+            options: Options(
+              extra: const {
+                'requiresAuth': false,
+                'skipAuthRefresh': true,
+              },
+              validateStatus: (_) => true,
+            ),
+          )
+          .timeout(const Duration(seconds: 3));
+
+      debugPrint(
+        '[ApiClient] startup probe ${response.statusCode} ${target.toString()}',
+      );
+    } on TimeoutException {
+      debugPrint('[ApiClient] startup probe timeout ${target.toString()}');
+    } on DioException catch (error) {
+      debugPrint(
+        '[ApiClient] startup probe failed ${target.toString()} ${error.message}',
+      );
+    } catch (error) {
+      debugPrint(
+        '[ApiClient] startup probe unexpected ${target.toString()} $error',
+      );
+    }
+  }
+
   void _configure() {
+    debugPrint('[ApiClient] baseUrl=${publicDio.options.baseUrl}');
+
     if (kDebugMode) {
       final logger = LogInterceptor(
         request: true,

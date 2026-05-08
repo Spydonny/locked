@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 
 import '../core/network/api_client.dart';
@@ -18,21 +20,14 @@ class AppApi {
     return DashboardSnapshot.fromJson(data);
   }
 
-  Future<WorkoutSession> fetchActiveWorkout() async {
-    final response = await _dio.get<dynamic>('/workouts');
-    final items = (response.data as List?) ?? const [];
-    if (items.isEmpty) {
-      return const WorkoutSession(
-        id: 'none',
-        title: 'No active workout',
-        durationLabel: '00:00:00',
-        restTimerSeconds: 75,
-        exercises: [],
-      );
+  Future<WorkoutSession?> fetchActiveWorkout() async {
+    final response = await _dio.get<dynamic>('/workouts/active');
+    final data = response.data;
+    if (data == null) {
+      return null;
     }
 
-    final latest = (items.first as Map).cast<String, dynamic>();
-    return WorkoutSession.fromJson(latest);
+    return WorkoutSession.fromJson((data as Map).cast<String, dynamic>());
   }
 
   Future<List<ExerciseLibraryItem>> fetchExercises() async {
@@ -151,23 +146,60 @@ class AppApi {
     }).toList();
   }
 
-  Future<void> createWorkout({
+  Future<WorkoutSession> createWorkout({
     required String title,
     String? notes,
+    int restTimerSeconds = 75,
   }) async {
     final now = DateTime.now().toUtc().toIso8601String();
-    await _dio.post<dynamic>(
+    final response = await _dio.post<dynamic>(
       '/workouts',
       data: {
         'title': title,
         'notes': notes,
         'started_at': now,
+        'rest_timer_seconds': restTimerSeconds,
       },
     );
+    return WorkoutSession.fromJson((response.data as Map).cast<String, dynamic>());
   }
 
-  Future<void> finishWorkout(String workoutId) async {
-    await _dio.post<dynamic>('/workouts/$workoutId/finish');
+  Future<WorkoutSession> saveWorkout(WorkoutSession session) async {
+    final response = await _dio.put<dynamic>(
+      '/workouts/${session.id}',
+      data: session.toUpdateJson(),
+    );
+    return WorkoutSession.fromJson((response.data as Map).cast<String, dynamic>());
+  }
+
+  Future<WorkoutSession> completeWorkout({
+    required String workoutId,
+    String? caption,
+    Uint8List? photoBytes,
+    String? filename,
+    String? contentType,
+  }) async {
+    final formData = FormData.fromMap({
+      'caption': caption,
+      'ended_at': DateTime.now().toUtc().toIso8601String(),
+      if (photoBytes != null)
+        'photo': MultipartFile.fromBytes(
+          photoBytes,
+          filename: filename ?? 'workout-photo.jpg',
+          contentType: contentType == null
+              ? null
+              : DioMediaType.parse(contentType),
+        ),
+    });
+
+    final response = await _dio.post<dynamic>(
+      '/workouts/$workoutId/complete',
+      data: formData,
+      options: Options(
+        contentType: 'multipart/form-data',
+      ),
+    );
+    return WorkoutSession.fromJson((response.data as Map).cast<String, dynamic>());
   }
 
   Future<void> createRoutine({

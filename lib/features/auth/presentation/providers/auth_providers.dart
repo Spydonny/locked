@@ -235,5 +235,6 @@ final authControllerProvider =
     NotifierProvider<AuthController, AuthFlowState>(AuthController.new);
 
 final authBootstrapProvider = FutureProvider<void>((ref) async {
+  await ref.read(apiClientProvider).probeStartup();
   await ref.read(authControllerProvider.notifier).initialize();
 });
