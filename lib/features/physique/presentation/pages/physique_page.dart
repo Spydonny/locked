@@ -92,7 +92,7 @@ class PhysiquePage extends ConsumerWidget {
 
                       if (shouldCreate != true || weight == null || weight <= 0) return;
 
-                      await ref.read(appRepositoryProvider).createBodyMetric(
+                      await ref.read(appApiProvider).createBodyMetric(
                             weight: weight,
                             bodyFat: bodyFat,
                             chest: chest,

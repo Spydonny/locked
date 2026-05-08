@@ -192,18 +192,13 @@ CustomTransitionPage<void> _authPage({
 }
 
 class _RouterRefreshListenable extends ChangeNotifier {
-  _RouterRefreshListenable._(this._subscription);
-
-  final StreamSubscription<Object?> _subscription;
-
-  factory _RouterRefreshListenable(Stream<Object?> stream) {
-    late final _RouterRefreshListenable listenable;
-    final subscription = stream.listen((_) {
-      listenable.notifyListeners();
+  _RouterRefreshListenable(Stream<Object?> stream) {
+    _subscription = stream.listen((_) {
+      notifyListeners();
     });
-    listenable = _RouterRefreshListenable._(subscription);
-    return listenable;
   }
+
+  late final StreamSubscription<Object?> _subscription;
 
   @override
   void dispose() {

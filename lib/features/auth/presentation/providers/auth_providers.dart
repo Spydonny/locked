@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 
@@ -122,10 +124,15 @@ class AuthController extends Notifier<AuthFlowState> {
     final vault = ref.read(authSessionVaultProvider);
 
     try {
-      await repository.restoreSession();
+      debugPrint('[AuthController] initialize(): restoreSession start');
+      await repository.restoreSession().timeout(const Duration(seconds: 8));
+      debugPrint('[AuthController] initialize(): restoreSession done');
     } on ApiException catch (_) {
       // The repository already clears the vault on restore failure.
       debugPrint('[AuthController] restoreSession(): ApiException');
+    } on TimeoutException catch (_) {
+      await vault.clear();
+      debugPrint('[AuthController] restoreSession(): timeout');
     } catch (error) {
       debugPrint('[AuthController] restoreSession(): unexpected $error');
     } finally {

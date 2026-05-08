@@ -1,18 +1,16 @@
-import '../entities/auth_session.dart';
-
 abstract interface class AuthRepository {
-  Future<AuthSession> login({
+  Future<void> login({
     required String email,
     required String password,
   });
 
-  Future<AuthSession> register({
+  Future<void> register({
     required String displayName,
     required String email,
     required String password,
   });
 
-  Future<AuthSession?> restoreSession();
+  Future<void> restoreSession();
 
   Future<void> logout();
 }

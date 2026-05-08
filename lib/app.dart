@@ -19,13 +19,13 @@ class LockedApp extends ConsumerWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) => MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        title: 'Locked',
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.system,
-        routerConfig: router,
-      ),
+          debugShowCheckedModeBanner: false,
+          title: 'Locked',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: ThemeMode.system,
+          routerConfig: router,
+        ),
     );
   }
 }

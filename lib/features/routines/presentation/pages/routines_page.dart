@@ -86,7 +86,7 @@ class RoutinesPage extends ConsumerWidget {
                           .where((e) => e.isNotEmpty)
                           .toList();
 
-                      await ref.read(appRepositoryProvider).createRoutine(
+                      await ref.read(appApiProvider).createRoutine(
                             title: title.isEmpty ? 'New routine' : title,
                             subtitle: subtitle.isEmpty ? 'Custom split' : subtitle,
                             scheduleDays: scheduleDays.isEmpty ? const ['Mon', 'Wed', 'Fri'] : scheduleDays,

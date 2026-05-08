@@ -19,15 +19,26 @@ class AuthSessionVault {
   Stream<AuthSnapshot> get changes => _controller.stream;
 
   Future<AuthSnapshot> hydrate() async {
+    debugPrint('[AuthSessionVault] hydrate(): readSession start');
     AuthSnapshot? stored;
     try {
-      stored = await _storage.readSession();
+      stored = await _storage.readSession().timeout(const Duration(seconds: 3));
+      debugPrint(
+        '[AuthSessionVault] hydrate(): readSession done hasStored=${stored != null}',
+      );
+    } on TimeoutException catch (error) {
+      debugPrint('[AuthSessionVault] hydrate(): readSession timeout $error');
+      stored = null;
     } catch (error) {
       debugPrint('[AuthSessionVault] hydrate failed: $error');
       stored = null;
     }
 
-    _snapshot = stored?.copyWith(hydrated: true) ?? const AuthSnapshot(hydrated: true);
+    _snapshot =
+        stored?.copyWith(hydrated: true) ?? const AuthSnapshot(hydrated: true);
+    debugPrint(
+      '[AuthSessionVault] hydrate(): snapshot hydrated=${_snapshot.hydrated} hasTokens=${_snapshot.hasTokens}',
+    );
     _controller.add(_snapshot);
     return _snapshot;
   }

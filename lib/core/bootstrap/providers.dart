@@ -1,75 +1,57 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../api/app_api.dart';
 import '../../features/dashboard/domain/entities/dashboard_snapshot.dart';
 import '../../features/workout/domain/entities/workout_session.dart';
 import '../../features/auth/presentation/providers/auth_providers.dart';
-import '../../services/app_repository.dart';
-import '../../services/api_app_repository.dart';
 import '../../shared/models/app_models.dart';
 
-final appRepositoryProvider = Provider<AppRepository>((ref) {
-  return ApiAppRepository(ref.watch(apiClientProvider));
+final appApiProvider = Provider<AppApi>((ref) {
+  return AppApi(ref.watch(apiClientProvider));
 });
 
-class CurrentUserController extends Notifier<AppUser?> {
-  @override
-  AppUser? build() => null;
-
-  void signIn(AppUser user) {
-    state = user;
-  }
-
-  void signOut() {
-    state = null;
-  }
-}
-
-final currentUserProvider = NotifierProvider<CurrentUserController, AppUser?>(
-  CurrentUserController.new,
-);
-
 final dashboardProvider = FutureProvider<DashboardSnapshot>((ref) async {
-  final repository = ref.watch(appRepositoryProvider);
-  return repository.fetchDashboard();
+  final api = ref.watch(appApiProvider);
+  return api.fetchDashboard();
 });
 
 final exerciseLibraryProvider = FutureProvider<List<ExerciseLibraryItem>>((
   ref,
 ) async {
-  final repository = ref.watch(appRepositoryProvider);
-  return repository.fetchExercises();
+  final api = ref.watch(appApiProvider);
+  return api.fetchExercises();
 });
 
 final routinesProvider = FutureProvider<List<RoutinePlan>>((ref) async {
-  final repository = ref.watch(appRepositoryProvider);
-  return repository.fetchRoutines();
+  final api = ref.watch(appApiProvider);
+  return api.fetchRoutines();
 });
 
 final analyticsProvider = FutureProvider<AnalyticsSnapshot>((ref) async {
-  final repository = ref.watch(appRepositoryProvider);
-  return repository.fetchAnalytics();
+  final api = ref.watch(appApiProvider);
+  return api.fetchAnalytics();
 });
 
 final nutritionProvider = FutureProvider<NutritionSnapshot>((ref) async {
-  final repository = ref.watch(appRepositoryProvider);
-  return repository.fetchNutrition();
+  final api = ref.watch(appApiProvider);
+  return api.fetchNutrition();
 });
 
 final physiqueProvider = FutureProvider<PhysiqueSnapshot>((ref) async {
-  final repository = ref.watch(appRepositoryProvider);
-  return repository.fetchPhysique();
+  final api = ref.watch(appApiProvider);
+  return api.fetchPhysique();
 });
 
 final syncImportsProvider = FutureProvider<List<SyncImportJob>>((ref) async {
-  final repository = ref.watch(appRepositoryProvider);
-  return repository.fetchImports();
+  final api = ref.watch(appApiProvider);
+  return api.fetchImports();
 });
 
 class ActiveWorkoutController extends AsyncNotifier<WorkoutSession> {
   @override
   Future<WorkoutSession> build() async {
-    final repository = ref.watch(appRepositoryProvider);
-    return repository.fetchActiveWorkout();
+    final api = ref.watch(appApiProvider);
+    return api.fetchActiveWorkout();
   }
 
   Future<void> finishWorkout() async {
@@ -77,8 +59,8 @@ class ActiveWorkoutController extends AsyncNotifier<WorkoutSession> {
     if (current == null) {
       return;
     }
-    final repository = ref.read(appRepositoryProvider);
-    await repository.finishWorkout(current.id);
+    final api = ref.read(appApiProvider);
+    await api.finishWorkout(current.id);
     ref.invalidateSelf();
     ref.invalidate(dashboardProvider);
   }

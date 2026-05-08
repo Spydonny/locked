@@ -37,11 +37,25 @@ class ApiClient {
   Completer<AuthTokens>? _refreshCompleter;
 
   static BaseOptions _options(String? baseUrl) {
+    final resolvedBaseUrl = baseUrl ??
+        const String.fromEnvironment(
+          'LOCKED_API_BASE_URL',
+          defaultValue: 'http://127.0.0.1:8000/api/v1',
+        );
+    final uri = Uri.tryParse(resolvedBaseUrl);
+
+    // if (kReleaseMode &&
+    //     uri != null &&
+    //     uri.scheme != 'https' &&
+    //     uri.host != '127.0.0.1' &&
+    //     uri.host != 'localhost') {
+    //   throw StateError(
+    //     'LOCKED_API_BASE_URL must use HTTPS outside local development.',
+    //   );
+    // }
+
     return BaseOptions(
-      baseUrl: baseUrl ?? const String.fromEnvironment(
-        'LOCKED_API_BASE_URL',
-        defaultValue: 'http://127.0.0.1:8000/api/v1',
-      ),
+      baseUrl: resolvedBaseUrl,
       connectTimeout: const Duration(seconds: 20),
       receiveTimeout: const Duration(seconds: 20),
       sendTimeout: const Duration(seconds: 20),
@@ -53,20 +67,22 @@ class ApiClient {
   }
 
   void _configure() {
-    final logger = LogInterceptor(
-      request: true,
-      requestHeader: true,
-      requestBody: true,
-      responseHeader: false,
-      responseBody: true,
-      error: true,
-      logPrint: (object) {
-        debugPrint('[ApiClient] ${object.toString()}');
-      },
-    );
+    if (kDebugMode) {
+      final logger = LogInterceptor(
+        request: true,
+        requestHeader: true,
+        requestBody: true,
+        responseHeader: false,
+        responseBody: true,
+        error: true,
+        logPrint: (object) {
+          debugPrint('[ApiClient] ${object.toString()}');
+        },
+      );
 
-    publicDio.interceptors.add(logger);
-    dio.interceptors.add(logger);
+      publicDio.interceptors.add(logger);
+      dio.interceptors.add(logger);
+    }
 
     dio.interceptors.add(
       QueuedInterceptorsWrapper(

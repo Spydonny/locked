@@ -108,7 +108,7 @@ class NutritionPage extends ConsumerWidget {
 
                       if (shouldCreate != true) return;
 
-                      await ref.read(appRepositoryProvider).createNutritionEntry(
+                      await ref.read(appApiProvider).createNutritionEntry(
                             mealType: mealType.isEmpty ? 'Meal' : mealType,
                             title: title.isEmpty ? 'Untitled' : title,
                             calories: calories,

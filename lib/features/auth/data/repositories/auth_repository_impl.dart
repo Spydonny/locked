@@ -1,5 +1,8 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+
 import '../../../../core/network/api_exception.dart';
-import '../../domain/entities/auth_session.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../auth_session_vault.dart';
 import '../services/auth_api_service.dart';
@@ -15,7 +18,7 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthSessionVault _vault;
 
   @override
-  Future<AuthSession> login({
+  Future<void> login({
     required String email,
     required String password,
   }) async {
@@ -26,12 +29,10 @@ class AuthRepositoryImpl implements AuthRepository {
     await _vault.saveTokens(tokens);
     final user = await _apiService.getCurrentUser();
     await _vault.saveUser(user);
-
-    return AuthSession(tokens: tokens, user: user);
   }
 
   @override
-  Future<AuthSession> register({
+  Future<void> register({
     required String displayName,
     required String email,
     required String password,
@@ -49,27 +50,29 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<AuthSession?> restoreSession() async {
+  Future<void> restoreSession() async {
+    debugPrint('[AuthRepository] restoreSession(): hydrate start');
     final snapshot = await _vault.hydrate();
+    debugPrint(
+      '[AuthRepository] restoreSession(): hydrate done hydrated=${snapshot.hydrated} hasTokens=${snapshot.hasTokens}',
+    );
     if (!snapshot.hasTokens) {
-      return null;
+      return;
     }
 
     try {
-      final user = await _apiService.getCurrentUser();
+      debugPrint('[AuthRepository] restoreSession(): getCurrentUser start');
+      final user = await _apiService
+          .getCurrentUser()
+          .timeout(const Duration(seconds: 6));
+      debugPrint('[AuthRepository] restoreSession(): getCurrentUser done');
       await _vault.saveUser(user);
-      final refreshedSnapshot = _vault.snapshot;
-      if (refreshedSnapshot.tokens == null) {
-        return null;
-      }
-
-      return AuthSession(
-        tokens: refreshedSnapshot.tokens!,
-        user: user,
-      );
     } on ApiException {
       await _vault.clear();
       rethrow;
+    } on TimeoutException {
+      debugPrint('[AuthRepository] restoreSession(): getCurrentUser timeout');
+      await _vault.clear();
     }
   }
 
