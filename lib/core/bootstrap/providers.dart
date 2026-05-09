@@ -49,6 +49,15 @@ final syncImportsProvider = FutureProvider<List<SyncImportJob>>((ref) async {
   return api.fetchImports();
 });
 
+final socialFeedProvider =
+    FutureProvider.family<SocialFeedSnapshot, SocialFeedScope>((
+      ref,
+      scope,
+    ) async {
+      final api = ref.watch(appApiProvider);
+      return api.fetchSocialFeed(scope: scope);
+    });
+
 class ActiveWorkoutController extends AsyncNotifier<WorkoutSession?> {
   @override
   Future<WorkoutSession?> build() async {
@@ -73,6 +82,7 @@ class ActiveWorkoutController extends AsyncNotifier<WorkoutSession?> {
     List<int>? photoBytes,
     String? filename,
     String? contentType,
+    bool shareToFeed = false,
   }) async {
     final current = state.value;
     if (current == null) {
@@ -85,9 +95,12 @@ class ActiveWorkoutController extends AsyncNotifier<WorkoutSession?> {
       photoBytes: photoBytes == null ? null : Uint8List.fromList(photoBytes),
       filename: filename,
       contentType: contentType,
+      shareToFeed: shareToFeed,
     );
     state = const AsyncData(null);
     ref.invalidate(dashboardProvider);
+    ref.invalidate(socialFeedProvider(SocialFeedScope.all));
+    ref.invalidate(socialFeedProvider(SocialFeedScope.following));
   }
 
   Future<void> addExercise(ExerciseLibraryItem item) async {
@@ -208,9 +221,7 @@ class ActiveWorkoutController extends AsyncNotifier<WorkoutSession?> {
       }
 
       final filtered = exercise.sets.where((set) => set.id != setId).toList();
-      return exercise.copyWith(
-        sets: _renumberSets(filtered),
-      );
+      return exercise.copyWith(sets: _renumberSets(filtered));
     }).toList();
 
     await _persist(current.copyWith(exercises: updatedExercises));

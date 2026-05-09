@@ -22,7 +22,7 @@ class LockedApp extends ConsumerWidget {
           debugShowCheckedModeBanner: false,
           title: 'Locked',
           theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
+          // darkTheme: AppTheme.darkTheme,
           themeMode: ThemeMode.system,
           routerConfig: router,
         ),

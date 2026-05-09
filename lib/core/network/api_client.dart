@@ -17,12 +17,12 @@ class ApiClient {
     required SaveTokens saveTokens,
     required RefreshTokens refreshTokens,
     required SessionExpired onSessionExpired,
-  })  : _readTokens = readTokens,
-        _saveTokens = saveTokens,
-        _refreshTokens = refreshTokens,
-        _onSessionExpired = onSessionExpired,
-        publicDio = Dio(_options(baseUrl)),
-        dio = Dio(_options(baseUrl)) {
+  }) : _readTokens = readTokens,
+       _saveTokens = saveTokens,
+       _refreshTokens = refreshTokens,
+       _onSessionExpired = onSessionExpired,
+       publicDio = Dio(_options(baseUrl)),
+       dio = Dio(_options(baseUrl)) {
     _configure();
   }
 
@@ -37,13 +37,12 @@ class ApiClient {
   Completer<AuthTokens>? _refreshCompleter;
 
   static BaseOptions _options(String? baseUrl) {
-    final resolvedBaseUrl = baseUrl ??
+    final resolvedBaseUrl =
+        baseUrl ??
         const String.fromEnvironment(
           'LOCKED_API_BASE_URL',
           defaultValue: 'http://127.0.0.1:8000/api/v1',
         );
-    final uri = Uri.tryParse(resolvedBaseUrl);
-
     // if (kReleaseMode &&
     //     uri != null &&
     //     uri.scheme != 'https' &&
@@ -74,10 +73,7 @@ class ApiClient {
           .getUri<dynamic>(
             target,
             options: Options(
-              extra: const {
-                'requiresAuth': false,
-                'skipAuthRefresh': true,
-              },
+              extra: const {'requiresAuth': false, 'skipAuthRefresh': true},
               validateStatus: (_) => true,
             ),
           )

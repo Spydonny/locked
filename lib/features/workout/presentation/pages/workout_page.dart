@@ -1,7 +1,6 @@
 import 'dart:async';
-import 'dart:typed_data';
-
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -159,9 +158,7 @@ class _WorkoutPageState extends ConsumerState<WorkoutPage> {
               const SizedBox(height: 14),
               Expanded(
                 child: session.exercises.isEmpty
-                    ? _EmptyExerciseList(
-                        onAddExercise: _showExercisePicker,
-                      )
+                    ? _EmptyExerciseList(onAddExercise: _showExercisePicker)
                     : ListView.builder(
                         itemCount: session.exercises.length,
                         itemBuilder: (context, index) {
@@ -191,24 +188,25 @@ class _WorkoutPageState extends ConsumerState<WorkoutPage> {
                                       setId: setId,
                                     );
                               },
-                              onUpdateSet: ({
-                                required String setId,
-                                double? weight,
-                                int? reps,
-                                int? rpe,
-                                bool? isCompleted,
-                              }) async {
-                                await ref
-                                    .read(activeWorkoutProvider.notifier)
-                                    .updateSet(
-                                      exerciseId: exercise.id,
-                                      setId: setId,
-                                      weight: weight,
-                                      reps: reps,
-                                      rpe: rpe,
-                                      isCompleted: isCompleted,
-                                    );
-                              },
+                              onUpdateSet:
+                                  ({
+                                    required String setId,
+                                    double? weight,
+                                    int? reps,
+                                    int? rpe,
+                                    bool? isCompleted,
+                                  }) async {
+                                    await ref
+                                        .read(activeWorkoutProvider.notifier)
+                                        .updateSet(
+                                          exerciseId: exercise.id,
+                                          setId: setId,
+                                          weight: weight,
+                                          reps: reps,
+                                          rpe: rpe,
+                                          isCompleted: isCompleted,
+                                        );
+                                  },
                               onRemoveSet: (setId) async {
                                 HapticFeedback.lightImpact();
                                 await ref
@@ -230,13 +228,13 @@ class _WorkoutPageState extends ConsumerState<WorkoutPage> {
                     Expanded(
                       child: CupertinoButton(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        color: AppColors.white,
+                        color: _primaryButtonColor(context),
                         borderRadius: BorderRadius.circular(20),
                         onPressed: _showExercisePicker,
-                        child: const Text(
+                        child: Text(
                           'Add Exercise',
                           style: TextStyle(
-                            color: AppColors.black,
+                            color: _primaryButtonForeground(context),
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -246,7 +244,7 @@ class _WorkoutPageState extends ConsumerState<WorkoutPage> {
                     Expanded(
                       child: CupertinoButton(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        color: const Color(0x14FFFFFF),
+                        color: _secondarySurfaceColor(context),
                         borderRadius: BorderRadius.circular(20),
                         onPressed: session.exercises.isEmpty
                             ? null
@@ -254,10 +252,10 @@ class _WorkoutPageState extends ConsumerState<WorkoutPage> {
                                 HapticFeedback.heavyImpact();
                                 await _showFinishSheet(session);
                               },
-                        child: const Text(
+                        child: Text(
                           'Finish Workout',
                           style: TextStyle(
-                            color: AppColors.white,
+                            color: _secondaryButtonForeground(context),
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -304,23 +302,28 @@ class _WorkoutPageState extends ConsumerState<WorkoutPage> {
     await showCupertinoModalPopup<void>(
       context: context,
       builder: (context) => _FinishWorkoutSheet(
-        onSubmit: ({
-          required String caption,
-          Uint8List? photoBytes,
-          String? filename,
-          String? contentType,
-        }) async {
-          await ref.read(activeWorkoutProvider.notifier).completeWorkout(
-                caption: caption,
-                photoBytes: photoBytes,
-                filename: filename,
-                contentType: contentType,
-              );
-          if (mounted) {
-            Navigator.of(context).pop();
-            context.go('/dashboard');
-          }
-        },
+        onSubmit:
+            ({
+              required String caption,
+              Uint8List? photoBytes,
+              String? filename,
+              String? contentType,
+              required bool shareToFeed,
+            }) async {
+              await ref
+                  .read(activeWorkoutProvider.notifier)
+                  .completeWorkout(
+                    caption: caption,
+                    photoBytes: photoBytes,
+                    filename: filename,
+                    contentType: contentType,
+                    shareToFeed: shareToFeed,
+                  );
+              if (mounted) {
+                Navigator.of(context).pop();
+                context.go(shareToFeed ? '/social' : '/dashboard');
+              }
+            },
       ),
     );
   }
@@ -352,10 +355,7 @@ class _EmptyWorkoutState extends StatelessWidget {
               const SizedBox(height: 12),
               const Text(
                 'Create an active session, pick exercises from your library, edit sets and weights, then finish with a photo and caption saved in MongoDB.',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  height: 1.5,
-                ),
+                style: TextStyle(color: AppColors.textSecondary, height: 1.5),
               ),
               const SizedBox(height: 22),
               CupertinoButton(
@@ -363,13 +363,13 @@ class _EmptyWorkoutState extends StatelessWidget {
                   horizontal: 18,
                   vertical: 16,
                 ),
-                color: AppColors.white,
+                color: _primaryButtonColor(context),
                 borderRadius: BorderRadius.circular(20),
                 onPressed: onStart,
-                child: const Text(
+                child: Text(
                   'Start Workout',
                   style: TextStyle(
-                    color: AppColors.black,
+                    color: _primaryButtonForeground(context),
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -407,20 +407,17 @@ class _EmptyExerciseList extends StatelessWidget {
           const Text(
             'Pick an exercise and we will scaffold a few starter sets for you.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              height: 1.4,
-            ),
+            style: TextStyle(color: AppColors.textSecondary, height: 1.4),
           ),
           const SizedBox(height: 18),
           CupertinoButton(
-            color: const Color(0x16FFFFFF),
+            color: _secondarySurfaceColor(context),
             borderRadius: BorderRadius.circular(18),
             onPressed: onAddExercise,
-            child: const Text(
+            child: Text(
               'Choose Exercise',
               style: TextStyle(
-                color: AppColors.white,
+                color: _secondaryButtonForeground(context),
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -481,7 +478,8 @@ class _ExerciseCard extends StatelessWidget {
     int? reps,
     int? rpe,
     bool? isCompleted,
-  }) onUpdateSet;
+  })
+  onUpdateSet;
   final Future<void> Function(String setId) onRemoveSet;
 
   @override
@@ -522,7 +520,7 @@ class _ExerciseCard extends StatelessWidget {
                 ),
               ),
               CupertinoButton(
-                minSize: 0,
+                minimumSize: Size.zero,
                 padding: EdgeInsets.zero,
                 onPressed: onDelete,
                 child: const Icon(
@@ -541,28 +539,21 @@ class _ExerciseCard extends StatelessWidget {
                 set: set,
                 onToggleCompleted: () => onToggleSet(set.id),
                 onRemove: () => onRemoveSet(set.id),
-                onWeightChanged: (value) => onUpdateSet(
-                  setId: set.id,
-                  weight: value,
-                ),
-                onRepsChanged: (value) => onUpdateSet(
-                  setId: set.id,
-                  reps: value,
-                ),
-                onRpeChanged: (value) => onUpdateSet(
-                  setId: set.id,
-                  rpe: value,
-                ),
+                onWeightChanged: (value) =>
+                    onUpdateSet(setId: set.id, weight: value),
+                onRepsChanged: (value) =>
+                    onUpdateSet(setId: set.id, reps: value),
+                onRpeChanged: (value) => onUpdateSet(setId: set.id, rpe: value),
               ),
             );
           }),
           CupertinoButton(
             padding: EdgeInsets.zero,
             onPressed: onAddSet,
-            child: const Text(
+            child: Text(
               '+ Add Set',
               style: TextStyle(
-                color: AppColors.white,
+                color: Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -592,12 +583,18 @@ class _SetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: set.isCompleted ? const Color(0x20FFFFFF) : const Color(0x12FFFFFF),
+        color: set.isCompleted
+            ? colorScheme.primary.withValues(
+                alpha: _isDarkMode(context) ? 0.18 : 0.12,
+              )
+            : _secondarySurfaceColor(context),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0x18FFFFFF)),
+        border: Border.all(color: _strokeColor(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -613,7 +610,7 @@ class _SetCard extends StatelessWidget {
               ),
               const Spacer(),
               CupertinoButton(
-                minSize: 0,
+                minimumSize: Size.zero,
                 padding: const EdgeInsets.only(right: 10),
                 onPressed: onRemove,
                 child: const Icon(
@@ -623,14 +620,14 @@ class _SetCard extends StatelessWidget {
                 ),
               ),
               CupertinoButton(
-                minSize: 0,
+                minimumSize: Size.zero,
                 padding: EdgeInsets.zero,
                 onPressed: onToggleCompleted,
                 child: Icon(
                   set.isCompleted
                       ? CupertinoIcons.check_mark_circled_solid
                       : CupertinoIcons.circle,
-                  color: AppColors.white,
+                  color: colorScheme.primary,
                   size: 24,
                 ),
               ),
@@ -700,10 +697,16 @@ class _StepperMetric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0x10FFFFFF),
+        color: _secondarySurfaceColor(
+          context,
+          darkAlpha: 0.08,
+          lightAlpha: 0.92,
+        ),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
@@ -716,17 +719,14 @@ class _StepperMetric extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
                 child: CupertinoButton(
                   padding: EdgeInsets.zero,
-                  minSize: 28,
+                  minimumSize: const Size(28, 28),
                   onPressed: onDecrease,
                   child: const Icon(
                     CupertinoIcons.minus_circle_fill,
@@ -738,11 +738,11 @@ class _StepperMetric extends StatelessWidget {
               Expanded(
                 child: CupertinoButton(
                   padding: EdgeInsets.zero,
-                  minSize: 28,
+                  minimumSize: const Size(28, 28),
                   onPressed: onIncrease,
-                  child: const Icon(
+                  child: Icon(
                     CupertinoIcons.plus_circle_fill,
-                    color: AppColors.white,
+                    color: colorScheme.primary,
                     size: 22,
                   ),
                 ),
@@ -786,9 +786,9 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
         child: Container(
           height: MediaQuery.of(context).size.height * 0.78,
           padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-          decoration: const BoxDecoration(
-            color: Color(0xFF111111),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          decoration: BoxDecoration(
+            color: _sheetBackgroundColor(context),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -798,7 +798,7 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
                   width: 42,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0x32FFFFFF),
+                    color: _sheetHandleColor(context),
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
@@ -816,8 +816,8 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
               const SizedBox(height: 16),
               CupertinoSearchTextField(
                 controller: _searchController,
-                backgroundColor: const Color(0x14FFFFFF),
-                style: const TextStyle(color: AppColors.white),
+                backgroundColor: _secondarySurfaceColor(context),
+                style: TextStyle(color: _secondaryButtonForeground(context)),
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: 16),
@@ -863,8 +863,10 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
                                       children: [
                                         Text(
                                           item.name,
-                                          style: const TextStyle(
-                                            color: AppColors.white,
+                                          style: TextStyle(
+                                            color: _secondaryButtonForeground(
+                                              context,
+                                            ),
                                             fontSize: 18,
                                             fontWeight: FontWeight.w700,
                                           ),
@@ -879,9 +881,11 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
                                       ],
                                     ),
                                   ),
-                                  const Icon(
+                                  Icon(
                                     CupertinoIcons.add_circled_solid,
-                                    color: AppColors.white,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                   ),
                                 ],
                               ),
@@ -912,7 +916,9 @@ class _FinishWorkoutSheet extends StatefulWidget {
     Uint8List? photoBytes,
     String? filename,
     String? contentType,
-  }) onSubmit;
+    required bool shareToFeed,
+  })
+  onSubmit;
 
   @override
   State<_FinishWorkoutSheet> createState() => _FinishWorkoutSheetState();
@@ -925,6 +931,7 @@ class _FinishWorkoutSheetState extends State<_FinishWorkoutSheet> {
   Uint8List? _photoBytes;
   String? _filename;
   String? _contentType;
+  bool _shareToFeed = true;
   bool _submitting = false;
 
   @override
@@ -941,9 +948,9 @@ class _FinishWorkoutSheetState extends State<_FinishWorkoutSheet> {
         alignment: Alignment.bottomCenter,
         child: Container(
           padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-          decoration: const BoxDecoration(
-            color: Color(0xFF111111),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          decoration: BoxDecoration(
+            color: _sheetBackgroundColor(context),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: SingleChildScrollView(
             child: Column(
@@ -955,7 +962,7 @@ class _FinishWorkoutSheetState extends State<_FinishWorkoutSheet> {
                     width: 42,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0x32FFFFFF),
+                      color: _sheetHandleColor(context),
                       borderRadius: BorderRadius.circular(999),
                     ),
                   ),
@@ -967,21 +974,65 @@ class _FinishWorkoutSheetState extends State<_FinishWorkoutSheet> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Persist the completed workout, then attach a progress photo and a short caption.',
+                  'Wrap the session, attach a progress photo, and optionally publish it to your feed.',
                   style: TextStyle(color: AppColors.textSecondary, height: 1.4),
                 ),
                 const SizedBox(height: 18),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: _secondarySurfaceColor(context),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Post to feed',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Share this completed workout to the All and Friends tabs.',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                height: 1.35,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      CupertinoSwitch(
+                        value: _shareToFeed,
+                        onChanged: (value) {
+                          setState(() {
+                            _shareToFeed = value;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
                 CupertinoTextField(
                   controller: _captionController,
                   maxLines: 3,
                   padding: const EdgeInsets.all(14),
-                  placeholder: 'Caption for this session',
+                  placeholder: _shareToFeed
+                      ? 'Say something about this session'
+                      : 'Optional workout note',
                   placeholderStyle: const TextStyle(
                     color: AppColors.textTertiary,
                   ),
-                  style: const TextStyle(color: AppColors.white),
+                  style: TextStyle(color: _secondaryButtonForeground(context)),
                   decoration: BoxDecoration(
-                    color: const Color(0x14FFFFFF),
+                    color: _secondarySurfaceColor(context),
                     borderRadius: BorderRadius.circular(18),
                   ),
                 ),
@@ -1002,13 +1053,32 @@ class _FinishWorkoutSheetState extends State<_FinishWorkoutSheet> {
                   children: [
                     Expanded(
                       child: CupertinoButton(
-                        color: const Color(0x16FFFFFF),
+                        color: _secondarySurfaceColor(context),
                         borderRadius: BorderRadius.circular(18),
-                        onPressed: _pickImage,
+                        onPressed: () => _pickImage(ImageSource.camera),
                         child: Text(
-                          _photoBytes == null ? 'Pick Photo' : 'Replace Photo',
-                          style: const TextStyle(
-                            color: AppColors.white,
+                          _photoBytes == null ? 'Take Photo' : 'Retake Photo',
+                          style: TextStyle(
+                            color: _secondaryButtonForeground(context),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: CupertinoButton(
+                        color: _secondarySurfaceColor(
+                          context,
+                          darkAlpha: 0.08,
+                          lightAlpha: 0.68,
+                        ),
+                        borderRadius: BorderRadius.circular(18),
+                        onPressed: () => _pickImage(ImageSource.gallery),
+                        child: Text(
+                          'Gallery',
+                          style: TextStyle(
+                            color: _secondaryButtonForeground(context),
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -1017,7 +1087,11 @@ class _FinishWorkoutSheetState extends State<_FinishWorkoutSheet> {
                     if (_photoBytes != null) ...[
                       const SizedBox(width: 10),
                       CupertinoButton(
-                        color: const Color(0x10FFFFFF),
+                        color: _secondarySurfaceColor(
+                          context,
+                          darkAlpha: 0.08,
+                          lightAlpha: 0.68,
+                        ),
                         borderRadius: BorderRadius.circular(18),
                         onPressed: () {
                           setState(() {
@@ -1026,9 +1100,9 @@ class _FinishWorkoutSheetState extends State<_FinishWorkoutSheet> {
                             _contentType = null;
                           });
                         },
-                        child: const Icon(
+                        child: Icon(
                           CupertinoIcons.delete,
-                          color: AppColors.white,
+                          color: _secondaryButtonForeground(context),
                         ),
                       ),
                     ],
@@ -1048,17 +1122,19 @@ class _FinishWorkoutSheetState extends State<_FinishWorkoutSheet> {
                 SizedBox(
                   width: double.infinity,
                   child: CupertinoButton(
-                    color: AppColors.white,
+                    color: _primaryButtonColor(context),
                     borderRadius: BorderRadius.circular(20),
                     onPressed: _submitting ? null : _submit,
                     child: _submitting
-                        ? const CupertinoActivityIndicator(
-                            color: AppColors.black,
+                        ? CupertinoActivityIndicator(
+                            color: _primaryButtonForeground(context),
                           )
-                        : const Text(
-                            'Complete & Save',
+                        : Text(
+                            _shareToFeed
+                                ? 'Complete & Post'
+                                : 'Complete Workout',
                             style: TextStyle(
-                              color: AppColors.black,
+                              color: _primaryButtonForeground(context),
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -1072,11 +1148,8 @@ class _FinishWorkoutSheetState extends State<_FinishWorkoutSheet> {
     );
   }
 
-  Future<void> _pickImage() async {
-    final file = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 85,
-    );
+  Future<void> _pickImage(ImageSource source) async {
+    final file = await _picker.pickImage(source: source, imageQuality: 85);
     if (file == null) {
       return;
     }
@@ -1094,6 +1167,15 @@ class _FinishWorkoutSheetState extends State<_FinishWorkoutSheet> {
   }
 
   Future<void> _submit() async {
+    if (_shareToFeed && _photoBytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Add a progress photo before posting this workout.'),
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _submitting = true;
     });
@@ -1104,6 +1186,7 @@ class _FinishWorkoutSheetState extends State<_FinishWorkoutSheet> {
         photoBytes: _photoBytes,
         filename: _filename,
         contentType: _contentType,
+        shareToFeed: _shareToFeed,
       );
     } finally {
       if (mounted) {
@@ -1134,4 +1217,52 @@ String _guessContentType(String filename) {
     return 'image/gif';
   }
   return 'image/jpeg';
+}
+
+bool _isDarkMode(BuildContext context) {
+  return Theme.of(context).brightness == Brightness.dark;
+}
+
+Color _primaryButtonColor(BuildContext context) {
+  return Theme.of(context).colorScheme.primary;
+}
+
+Color _primaryButtonForeground(BuildContext context) {
+  return Theme.of(context).colorScheme.onPrimary;
+}
+
+Color _secondaryButtonForeground(BuildContext context) {
+  return _isDarkMode(context)
+      ? AppColors.white
+      : Theme.of(context).colorScheme.onSurface;
+}
+
+Color _secondarySurfaceColor(
+  BuildContext context, {
+  double darkAlpha = 0.12,
+  double lightAlpha = 0.82,
+}) {
+  final colorScheme = Theme.of(context).colorScheme;
+  return _isDarkMode(context)
+      ? Colors.white.withValues(alpha: darkAlpha)
+      : colorScheme.surfaceContainerHighest.withValues(alpha: lightAlpha);
+}
+
+Color _strokeColor(BuildContext context) {
+  final colorScheme = Theme.of(context).colorScheme;
+  return _isDarkMode(context)
+      ? Colors.white.withValues(alpha: 0.1)
+      : colorScheme.outlineVariant.withValues(alpha: 0.5);
+}
+
+Color _sheetBackgroundColor(BuildContext context) {
+  return _isDarkMode(context)
+      ? const Color(0xFF111111)
+      : Theme.of(context).colorScheme.surface;
+}
+
+Color _sheetHandleColor(BuildContext context) {
+  return _isDarkMode(context)
+      ? const Color(0x32FFFFFF)
+      : Colors.black.withValues(alpha: 0.14);
 }

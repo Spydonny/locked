@@ -34,7 +34,9 @@ class AppShellFrame extends StatelessWidget {
                     borderRadius: BorderRadius.circular(28),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.05),
+                        color: Colors.black.withValues(
+                          alpha: isDark ? 0.18 : 0.05,
+                        ),
                         blurRadius: 24,
                         offset: const Offset(0, 12),
                       ),
@@ -56,6 +58,10 @@ class AppShellFrame extends StatelessWidget {
                       BottomNavigationBarItem(
                         icon: Icon(CupertinoIcons.house_fill),
                         label: 'Home',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(CupertinoIcons.person_2_fill),
+                        label: 'Feed',
                       ),
                       BottomNavigationBarItem(
                         icon: Icon(CupertinoIcons.play_circle_fill),

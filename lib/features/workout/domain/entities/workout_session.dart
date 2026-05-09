@@ -83,11 +83,12 @@ class WorkoutExercise {
     final setsJson = (json['sets'] as List?) ?? const [];
     return WorkoutExercise(
       id: (json['id'] ?? '').toString(),
-      exerciseId: (json['exercise_id'] ?? json['exerciseId'] ?? json['id'] ?? '')
-          .toString(),
+      exerciseId:
+          (json['exercise_id'] ?? json['exerciseId'] ?? json['id'] ?? '')
+              .toString(),
       name: (json['name'] ?? '').toString(),
-      muscleGroup:
-          (json['muscleGroup'] ?? json['muscle_group'] ?? '').toString(),
+      muscleGroup: (json['muscleGroup'] ?? json['muscle_group'] ?? '')
+          .toString(),
       equipment: (json['equipment'] ?? '').toString(),
       notes: (json['notes'] ?? '').toString(),
       sets: setsJson
@@ -151,11 +152,11 @@ class WorkoutCompletionPhoto {
     return WorkoutCompletionPhoto(
       fileId: (json['file_id'] ?? json['fileId'] ?? '').toString(),
       filename: (json['filename'] ?? '').toString(),
-      contentType:
-          (json['content_type'] ?? json['contentType'] ?? '').toString(),
+      contentType: (json['content_type'] ?? json['contentType'] ?? '')
+          .toString(),
       sizeBytes: (json['size_bytes'] as num?)?.toInt() ?? 0,
-      downloadUrl:
-          (json['download_url'] ?? json['downloadUrl'] ?? '').toString(),
+      downloadUrl: (json['download_url'] ?? json['downloadUrl'] ?? '')
+          .toString(),
       caption: json['caption']?.toString(),
     );
   }
@@ -174,6 +175,7 @@ class WorkoutSession {
     this.endedAt,
     this.completedAt,
     this.completionPhoto,
+    this.completionPostId,
   });
 
   final String id;
@@ -187,6 +189,7 @@ class WorkoutSession {
   final String? notes;
   final List<WorkoutExercise> exercises;
   final WorkoutCompletionPhoto? completionPhoto;
+  final String? completionPostId;
 
   bool get isActive => status == 'active';
 
@@ -198,10 +201,8 @@ class WorkoutSession {
         total + exercise.sets.where((set) => set.isCompleted).length,
   );
 
-  int get totalSetCount => exercises.fold<int>(
-    0,
-    (total, exercise) => total + exercise.sets.length,
-  );
+  int get totalSetCount =>
+      exercises.fold<int>(0, (total, exercise) => total + exercise.sets.length);
 
   factory WorkoutSession.fromJson(Map<String, dynamic> json) {
     final exercisesJson = (json['exercises'] as List?) ?? const [];
@@ -248,6 +249,7 @@ class WorkoutSession {
                 completionPhotoJson.cast<String, dynamic>(),
               )
             : null,
+        completionPostId: json['completion_post_id']?.toString(),
       );
     }
 
@@ -270,6 +272,7 @@ class WorkoutSession {
               completionPhotoJson.cast<String, dynamic>(),
             )
           : null,
+      completionPostId: json['completion_post_id']?.toString(),
     );
   }
 
@@ -294,6 +297,7 @@ class WorkoutSession {
     String? notes,
     List<WorkoutExercise>? exercises,
     WorkoutCompletionPhoto? completionPhoto,
+    String? completionPostId,
   }) {
     return WorkoutSession(
       id: id ?? this.id,
@@ -307,6 +311,7 @@ class WorkoutSession {
       notes: notes ?? this.notes,
       exercises: exercises ?? this.exercises,
       completionPhoto: completionPhoto ?? this.completionPhoto,
+      completionPostId: completionPostId ?? this.completionPostId,
     );
   }
 }

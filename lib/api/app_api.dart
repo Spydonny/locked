@@ -13,6 +13,7 @@ class AppApi {
   final ApiClient _client;
 
   Dio get _dio => _client.dio;
+  String get baseUrl => _client.dio.options.baseUrl;
 
   Future<DashboardSnapshot> fetchDashboard() async {
     final response = await _dio.get<dynamic>('/dashboard');
@@ -161,7 +162,9 @@ class AppApi {
         'rest_timer_seconds': restTimerSeconds,
       },
     );
-    return WorkoutSession.fromJson((response.data as Map).cast<String, dynamic>());
+    return WorkoutSession.fromJson(
+      (response.data as Map).cast<String, dynamic>(),
+    );
   }
 
   Future<WorkoutSession> saveWorkout(WorkoutSession session) async {
@@ -169,7 +172,9 @@ class AppApi {
       '/workouts/${session.id}',
       data: session.toUpdateJson(),
     );
-    return WorkoutSession.fromJson((response.data as Map).cast<String, dynamic>());
+    return WorkoutSession.fromJson(
+      (response.data as Map).cast<String, dynamic>(),
+    );
   }
 
   Future<WorkoutSession> completeWorkout({
@@ -178,10 +183,12 @@ class AppApi {
     Uint8List? photoBytes,
     String? filename,
     String? contentType,
+    bool shareToFeed = false,
   }) async {
     final formData = FormData.fromMap({
       'caption': caption,
       'ended_at': DateTime.now().toUtc().toIso8601String(),
+      'share_to_feed': shareToFeed ? 'true' : 'false',
       if (photoBytes != null)
         'photo': MultipartFile.fromBytes(
           photoBytes,
@@ -195,11 +202,30 @@ class AppApi {
     final response = await _dio.post<dynamic>(
       '/workouts/$workoutId/complete',
       data: formData,
-      options: Options(
-        contentType: 'multipart/form-data',
-      ),
+      options: Options(contentType: 'multipart/form-data'),
     );
-    return WorkoutSession.fromJson((response.data as Map).cast<String, dynamic>());
+    return WorkoutSession.fromJson(
+      (response.data as Map).cast<String, dynamic>(),
+    );
+  }
+
+  Future<SocialFeedSnapshot> fetchSocialFeed({
+    required SocialFeedScope scope,
+  }) async {
+    final response = await _dio.get<dynamic>(
+      '/social/feed',
+      queryParameters: {'scope': scope.apiValue},
+    );
+    final data = (response.data as Map).cast<String, dynamic>();
+    return SocialFeedSnapshot.fromJson(data);
+  }
+
+  Future<void> followUser(String userId) async {
+    await _dio.post<dynamic>('/social/follow/$userId');
+  }
+
+  Future<void> unfollowUser(String userId) async {
+    await _dio.delete<dynamic>('/social/follow/$userId');
   }
 
   Future<void> createRoutine({

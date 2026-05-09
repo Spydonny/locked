@@ -15,6 +15,7 @@ import '../../features/nutrition/presentation/pages/nutrition_page.dart';
 import '../../features/physique/presentation/pages/physique_page.dart';
 import '../../features/routines/presentation/pages/routines_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
+import '../../features/social/presentation/pages/social_feed_page.dart';
 import '../../features/sync/presentation/pages/import_sync_page.dart';
 import '../../features/workout/presentation/pages/workout_page.dart';
 import '../../shared/widgets/app_shell_frame.dart';
@@ -65,27 +66,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/splash',
         name: 'splash',
         parentNavigatorKey: _rootNavigatorKey,
-        pageBuilder: (context, state) => const NoTransitionPage<void>(
-          child: AuthLoadingPage(),
-        ),
+        pageBuilder: (context, state) =>
+            const NoTransitionPage<void>(child: AuthLoadingPage()),
       ),
       GoRoute(
         path: '/auth/login',
         name: 'auth-login',
         parentNavigatorKey: _rootNavigatorKey,
-        pageBuilder: (context, state) => _authPage(
-          key: state.pageKey,
-          child: const SignInPage(),
-        ),
+        pageBuilder: (context, state) =>
+            _authPage(key: state.pageKey, child: const SignInPage()),
       ),
       GoRoute(
         path: '/auth/register',
         name: 'auth-register',
         parentNavigatorKey: _rootNavigatorKey,
-        pageBuilder: (context, state) => _authPage(
-          key: state.pageKey,
-          child: const RegisterPage(),
-        ),
+        pageBuilder: (context, state) =>
+            _authPage(key: state.pageKey, child: const RegisterPage()),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -98,6 +94,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: '/dashboard',
                 name: 'dashboard',
                 builder: (context, state) => const DashboardPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/social',
+                name: 'social',
+                builder: (context, state) => const SocialFeedPage(),
               ),
             ],
           ),
