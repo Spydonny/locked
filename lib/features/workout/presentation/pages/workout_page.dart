@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -299,32 +300,38 @@ class _WorkoutPageState extends ConsumerState<WorkoutPage> {
   }
 
   Future<void> _showFinishSheet(WorkoutSession session) async {
+    final router = GoRouter.of(context);
     await showCupertinoModalPopup<void>(
       context: context,
-      builder: (context) => _FinishWorkoutSheet(
-        onSubmit:
-            ({
-              required String caption,
-              Uint8List? photoBytes,
-              String? filename,
-              String? contentType,
-              required bool shareToFeed,
-            }) async {
-              await ref
-                  .read(activeWorkoutProvider.notifier)
-                  .completeWorkout(
-                    caption: caption,
-                    photoBytes: photoBytes,
-                    filename: filename,
-                    contentType: contentType,
-                    shareToFeed: shareToFeed,
-                  );
-              if (mounted) {
-                Navigator.of(context).pop();
-                context.go(shareToFeed ? '/social' : '/dashboard');
-              }
-            },
-      ),
+      builder: (sheetContext) {
+        final navigator = Navigator.of(sheetContext);
+        return _FinishWorkoutSheet(
+          onSubmit:
+              ({
+                required String caption,
+                Uint8List? photoBytes,
+                String? filename,
+                String? contentType,
+                required bool shareToFeed,
+              }) async {
+                await ref
+                    .read(activeWorkoutProvider.notifier)
+                    .completeWorkout(
+                      caption: caption,
+                      photoBytes: photoBytes,
+                      filename: filename,
+                      contentType: contentType,
+                      shareToFeed: shareToFeed,
+                    );
+                if (!mounted) {
+                  return;
+                }
+
+                navigator.pop();
+                router.go(shareToFeed ? '/social' : '/dashboard');
+              },
+        );
+      },
     );
   }
 }
@@ -779,129 +786,127 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
     final exercises = ref.watch(exerciseLibraryProvider);
     final query = _searchController.text.trim().toLowerCase();
 
-    return SafeArea(
-      top: false,
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: Container(
-          height: MediaQuery.of(context).size.height * 0.78,
-          padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-          decoration: BoxDecoration(
-            color: _sheetBackgroundColor(context),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+    return _BottomSheetFrame(
+      maxHeightFactor: 0.82,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SheetHandle(),
+          const SizedBox(height: 18),
+          const Text(
+            'Pick Exercise',
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 42,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: _sheetHandleColor(context),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
-              const Text(
-                'Pick Exercise',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Search your library and drop an exercise straight into the active session.',
-                style: TextStyle(color: AppColors.textSecondary, height: 1.4),
-              ),
-              const SizedBox(height: 16),
-              CupertinoSearchTextField(
-                controller: _searchController,
-                backgroundColor: _secondarySurfaceColor(context),
-                style: TextStyle(color: _secondaryButtonForeground(context)),
-                onChanged: (_) => setState(() {}),
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: exercises.when(
-                  data: (items) {
-                    final filtered = items.where((item) {
-                      if (query.isEmpty) {
-                        return true;
-                      }
+          const SizedBox(height: 8),
+          const Text(
+            'Search your library and drop an exercise straight into the active session.',
+            style: TextStyle(color: AppColors.textSecondary, height: 1.4),
+          ),
+          const SizedBox(height: 16),
+          CupertinoSearchTextField(
+            controller: _searchController,
+            backgroundColor: _secondarySurfaceColor(context),
+            style: TextStyle(color: _secondaryButtonForeground(context)),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: exercises.when(
+              data: (items) {
+                final filtered = items.where((item) {
+                  if (query.isEmpty) {
+                    return true;
+                  }
 
-                      final haystack =
-                          '${item.name} ${item.category} ${item.equipment}'
-                              .toLowerCase();
-                      return haystack.contains(query);
-                    }).toList();
+                  final haystack =
+                      '${item.name} ${item.category} ${item.equipment}'
+                          .toLowerCase();
+                  return haystack.contains(query);
+                }).toList();
 
-                    if (filtered.isEmpty) {
-                      return const Center(
-                        child: Text(
-                          'No exercises match this search yet.',
-                          style: TextStyle(color: AppColors.textSecondary),
-                        ),
-                      );
-                    }
+                if (filtered.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'No exercises match this search yet.',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                  );
+                }
 
-                    return ListView.builder(
-                      itemCount: filtered.length,
-                      itemBuilder: (context, index) {
-                        final item = filtered[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: GlassCard(
-                            child: CupertinoButton(
-                              padding: EdgeInsets.zero,
-                              onPressed: () => widget.onSelect(item),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          item.name,
-                                          style: TextStyle(
-                                            color: _secondaryButtonForeground(
-                                              context,
-                                            ),
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w700,
-                                          ),
+                return ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  itemCount: filtered.length,
+                  itemBuilder: (context, index) {
+                    final item = filtered[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: GlassCard(
+                        child: CupertinoButton(
+                          padding: EdgeInsets.zero,
+                          onPressed: () => widget.onSelect(item),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.name,
+                                      style: TextStyle(
+                                        color: _secondaryButtonForeground(
+                                          context,
                                         ),
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          '${item.category} / ${item.equipment}',
-                                          style: const TextStyle(
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ],
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     ),
-                                  ),
-                                  Icon(
-                                    CupertinoIcons.add_circled_solid,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                  ),
-                                ],
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      '${item.category} / ${item.equipment}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 12),
+                              Icon(
+                                CupertinoIcons.add_circled_solid,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ],
                           ),
-                        );
-                      },
+                        ),
+                      ),
                     );
                   },
-                  loading: () =>
-                      const Center(child: CupertinoActivityIndicator()),
-                  error: (error, _) => Center(child: Text('$error')),
-                ),
-              ),
-            ],
+                );
+              },
+              loading: () => const Center(child: CupertinoActivityIndicator()),
+              error: (error, _) => Center(child: Text('$error')),
+            ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SheetHandle extends StatelessWidget {
+  const _SheetHandle();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        width: 42,
+        height: 4,
+        decoration: BoxDecoration(
+          color: _sheetHandleColor(context),
+          borderRadius: BorderRadius.circular(999),
         ),
       ),
     );
@@ -942,42 +947,27 @@ class _FinishWorkoutSheetState extends State<_FinishWorkoutSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-          decoration: BoxDecoration(
-            color: _sheetBackgroundColor(context),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+    return _BottomSheetFrame(
+      maxHeightFactor: 0.9,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SheetHandle(),
+          const SizedBox(height: 18),
+          const Text(
+            'Finish Workout',
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
           ),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+          const SizedBox(height: 8),
+          const Text(
+            'Wrap the session, attach a progress photo, and optionally publish it to your feed.',
+            style: TextStyle(color: AppColors.textSecondary, height: 1.4),
+          ),
+          const SizedBox(height: 18),
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
               children: [
-                Center(
-                  child: Container(
-                    width: 42,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: _sheetHandleColor(context),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                const Text(
-                  'Finish Workout',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Wrap the session, attach a progress photo, and optionally publish it to your feed.',
-                  style: TextStyle(color: AppColors.textSecondary, height: 1.4),
-                ),
-                const SizedBox(height: 18),
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
@@ -985,6 +975,7 @@ class _FinishWorkoutSheetState extends State<_FinishWorkoutSheet> {
                     borderRadius: BorderRadius.circular(18),
                   ),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Expanded(
                         child: Column(
@@ -1008,6 +999,7 @@ class _FinishWorkoutSheetState extends State<_FinishWorkoutSheet> {
                           ],
                         ),
                       ),
+                      const SizedBox(width: 12),
                       CupertinoSwitch(
                         value: _shareToFeed,
                         onChanged: (value) {
@@ -1020,6 +1012,16 @@ class _FinishWorkoutSheetState extends State<_FinishWorkoutSheet> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                Text(
+                  'Caption',
+                  style: TextStyle(
+                    color: _secondaryButtonForeground(context),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 CupertinoTextField(
                   controller: _captionController,
                   maxLines: 3,
@@ -1037,6 +1039,16 @@ class _FinishWorkoutSheetState extends State<_FinishWorkoutSheet> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                Text(
+                  'Progress photo',
+                  style: TextStyle(
+                    color: _secondaryButtonForeground(context),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 if (_photoBytes != null) ...[
                   ClipRRect(
                     borderRadius: BorderRadius.circular(20),
@@ -1049,64 +1061,17 @@ class _FinishWorkoutSheetState extends State<_FinishWorkoutSheet> {
                   ),
                   const SizedBox(height: 12),
                 ],
-                Row(
-                  children: [
-                    Expanded(
-                      child: CupertinoButton(
-                        color: _secondarySurfaceColor(context),
-                        borderRadius: BorderRadius.circular(18),
-                        onPressed: () => _pickImage(ImageSource.camera),
-                        child: Text(
-                          _photoBytes == null ? 'Take Photo' : 'Retake Photo',
-                          style: TextStyle(
-                            color: _secondaryButtonForeground(context),
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: CupertinoButton(
-                        color: _secondarySurfaceColor(
-                          context,
-                          darkAlpha: 0.08,
-                          lightAlpha: 0.68,
-                        ),
-                        borderRadius: BorderRadius.circular(18),
-                        onPressed: () => _pickImage(ImageSource.gallery),
-                        child: Text(
-                          'Gallery',
-                          style: TextStyle(
-                            color: _secondaryButtonForeground(context),
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (_photoBytes != null) ...[
-                      const SizedBox(width: 10),
-                      CupertinoButton(
-                        color: _secondarySurfaceColor(
-                          context,
-                          darkAlpha: 0.08,
-                          lightAlpha: 0.68,
-                        ),
-                        borderRadius: BorderRadius.circular(18),
-                        onPressed: () {
-                          setState(() {
-                            _photoBytes = null;
-                            _filename = null;
-                            _contentType = null;
-                          });
-                        },
-                        child: Icon(
-                          CupertinoIcons.delete,
-                          color: _secondaryButtonForeground(context),
-                        ),
-                      ),
-                    ],
-                  ],
+                _PhotoActionButtons(
+                  hasPhoto: _photoBytes != null,
+                  onCameraPressed: () => _pickImage(ImageSource.camera),
+                  onGalleryPressed: () => _pickImage(ImageSource.gallery),
+                  onRemovePressed: () {
+                    setState(() {
+                      _photoBytes = null;
+                      _filename = null;
+                      _contentType = null;
+                    });
+                  },
                 ),
                 if (_filename != null) ...[
                   const SizedBox(height: 10),
@@ -1118,32 +1083,30 @@ class _FinishWorkoutSheetState extends State<_FinishWorkoutSheet> {
                     ),
                   ),
                 ],
-                const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  child: CupertinoButton(
-                    color: _primaryButtonColor(context),
-                    borderRadius: BorderRadius.circular(20),
-                    onPressed: _submitting ? null : _submit,
-                    child: _submitting
-                        ? CupertinoActivityIndicator(
-                            color: _primaryButtonForeground(context),
-                          )
-                        : Text(
-                            _shareToFeed
-                                ? 'Complete & Post'
-                                : 'Complete Workout',
-                            style: TextStyle(
-                              color: _primaryButtonForeground(context),
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                  ),
-                ),
               ],
             ),
           ),
-        ),
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: CupertinoButton(
+              color: _primaryButtonColor(context),
+              borderRadius: BorderRadius.circular(20),
+              onPressed: _submitting ? null : _submit,
+              child: _submitting
+                  ? CupertinoActivityIndicator(
+                      color: _primaryButtonForeground(context),
+                    )
+                  : Text(
+                      _shareToFeed ? 'Complete & Post' : 'Complete Workout',
+                      style: TextStyle(
+                        color: _primaryButtonForeground(context),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1195,6 +1158,168 @@ class _FinishWorkoutSheetState extends State<_FinishWorkoutSheet> {
         });
       }
     }
+  }
+}
+
+class _PhotoActionButtons extends StatelessWidget {
+  const _PhotoActionButtons({
+    required this.hasPhoto,
+    required this.onCameraPressed,
+    required this.onGalleryPressed,
+    required this.onRemovePressed,
+  });
+
+  final bool hasPhoto;
+  final VoidCallback onCameraPressed;
+  final VoidCallback onGalleryPressed;
+  final VoidCallback onRemovePressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = 10.0;
+        final actionCount = hasPhoto ? 3 : 2;
+        final buttonWidth =
+            (constraints.maxWidth - (spacing * (actionCount - 1))) /
+            actionCount;
+
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: [
+            SizedBox(
+              width: buttonWidth,
+              child: _SheetActionButton(
+                label: hasPhoto ? 'Retake' : 'Take Photo',
+                icon: CupertinoIcons.camera,
+                onPressed: onCameraPressed,
+              ),
+            ),
+            SizedBox(
+              width: buttonWidth,
+              child: _SheetActionButton(
+                label: 'Gallery',
+                icon: CupertinoIcons.photo_on_rectangle,
+                onPressed: onGalleryPressed,
+                subtle: true,
+              ),
+            ),
+            if (hasPhoto)
+              SizedBox(
+                width: buttonWidth,
+                child: _SheetActionButton(
+                  label: 'Remove',
+                  icon: CupertinoIcons.delete,
+                  onPressed: onRemovePressed,
+                  subtle: true,
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _SheetActionButton extends StatelessWidget {
+  const _SheetActionButton({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+    this.subtle = false,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
+  final bool subtle;
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoButton(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+      color: subtle
+          ? _secondarySurfaceColor(context, darkAlpha: 0.08, lightAlpha: 0.68)
+          : _secondarySurfaceColor(context),
+      borderRadius: BorderRadius.circular(18),
+      onPressed: onPressed,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: _secondaryButtonForeground(context), size: 20),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: _secondaryButtonForeground(context),
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BottomSheetFrame extends StatelessWidget {
+  const _BottomSheetFrame({required this.child, this.maxHeightFactor = 0.85});
+
+  final Widget child;
+  final double maxHeightFactor;
+
+  @override
+  Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final bottomInset = mediaQuery.viewInsets.bottom;
+    final bottomSafeArea = mediaQuery.padding.bottom;
+
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: SafeArea(
+        top: false,
+        child: AnimatedPadding(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          padding: EdgeInsets.only(bottom: bottomInset),
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: 560,
+                maxHeight: mediaQuery.size.height * maxHeightFactor,
+              ),
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.fromLTRB(
+                  18,
+                  16,
+                  18,
+                  math.max(18, bottomSafeArea + 12),
+                ),
+                decoration: BoxDecoration(
+                  color: _sheetBackgroundColor(context),
+                  border: Border.all(color: _strokeColor(context)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(30),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.18),
+                      blurRadius: 34,
+                      offset: const Offset(0, -8),
+                    ),
+                  ],
+                ),
+                child: child,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
