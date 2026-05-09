@@ -60,24 +60,24 @@ class AuthHeader extends StatelessWidget {
                 height: 1.45,
               ),
         ).animate(delay: 150.ms).fadeIn(duration: 420.ms).slideY(begin: 0.14),
-        const SizedBox(height: 20),
-        Row(
-          children: const [
-            Expanded(
-              child: _FeatureCard(
-                title: 'Private by design',
-                subtitle: 'Secure session vault and seamless refresh logic.',
-              ),
-            ),
-            SizedBox(width: 12),
-            Expanded(
-              child: _FeatureCard(
-                title: 'Synced instantly',
-                subtitle: 'Auth state survives restarts and network edges.',
-              ),
-            ),
-          ],
-        ).animate(delay: 220.ms).fadeIn(duration: 460.ms).slideY(begin: 0.1),
+        // const SizedBox(height: 20),
+        // Row(
+        //   children: const [
+        //     Expanded(
+        //       child: _FeatureCard(
+        //         title: 'Private by design',
+        //         subtitle: 'Secure session vault and seamless refresh logic.',
+        //       ),
+        //     ),
+        //     SizedBox(width: 12),
+        //     Expanded(
+        //       child: _FeatureCard(
+        //         title: 'Synced instantly',
+        //         subtitle: 'Auth state survives restarts and network edges.',
+        //       ),
+        //     ),
+        //   ],
+        // ).animate(delay: 220.ms).fadeIn(duration: 460.ms).slideY(begin: 0.1),
       ],
     );
   }

@@ -789,104 +789,123 @@ class _ExercisePickerSheetState extends ConsumerState<_ExercisePickerSheet> {
     return _BottomSheetFrame(
       maxHeightFactor: 0.82,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const _SheetHandle(),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           const Text(
             'Pick Exercise',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           const Text(
             'Search your library and drop an exercise straight into the active session.',
-            style: TextStyle(color: AppColors.textSecondary, height: 1.4),
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+              height: 1.4,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           CupertinoSearchTextField(
             controller: _searchController,
             backgroundColor: _secondarySurfaceColor(context),
             style: TextStyle(color: _secondaryButtonForeground(context)),
             onChanged: (_) => setState(() {}),
           ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: exercises.when(
-              data: (items) {
-                final filtered = items.where((item) {
-                  if (query.isEmpty) {
-                    return true;
-                  }
-
-                  final haystack =
-                      '${item.name} ${item.category} ${item.equipment}'
-                          .toLowerCase();
-                  return haystack.contains(query);
-                }).toList();
-
-                if (filtered.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'No exercises match this search yet.',
-                      style: TextStyle(color: AppColors.textSecondary),
-                    ),
-                  );
+          const SizedBox(height: 14),
+          exercises.when(
+            data: (items) {
+              final filtered = items.where((item) {
+                if (query.isEmpty) {
+                  return true;
                 }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  itemCount: filtered.length,
-                  itemBuilder: (context, index) {
-                    final item = filtered[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: GlassCard(
-                        child: CupertinoButton(
-                          padding: EdgeInsets.zero,
-                          onPressed: () => widget.onSelect(item),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      item.name,
-                                      style: TextStyle(
-                                        color: _secondaryButtonForeground(
-                                          context,
-                                        ),
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w700,
+                final haystack =
+                    '${item.name} ${item.category} ${item.equipment}'
+                        .toLowerCase();
+                return haystack.contains(query);
+              }).toList();
+
+              if (filtered.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: Text(
+                      'No exercises match this search yet.',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.only(bottom: 4),
+                itemCount: filtered.length,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemBuilder: (context, index) {
+                  final item = filtered[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: GlassCard(
+                      child: CupertinoButton(
+                        padding: EdgeInsets.zero,
+                        onPressed: () => widget.onSelect(item),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.name,
+                                    style: TextStyle(
+                                      color: _secondaryButtonForeground(
+                                        context,
                                       ),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
                                     ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      '${item.category} / ${item.equipment}',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                      ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${item.category} / ${item.equipment}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 12,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 12),
-                              Icon(
-                                CupertinoIcons.add_circled_solid,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 10),
+                            Icon(
+                              CupertinoIcons.add_circled_solid,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 22,
+                            ),
+                          ],
                         ),
                       ),
-                    );
-                  },
-                );
-              },
-              loading: () => const Center(child: CupertinoActivityIndicator()),
-              error: (error, _) => Center(child: Text('$error')),
+                    ),
+                  );
+                },
+              );
+            },
+            loading: () => const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(child: CupertinoActivityIndicator()),
+            ),
+            error: (error, _) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Center(child: Text('$error')),
             ),
           ),
         ],
@@ -950,142 +969,142 @@ class _FinishWorkoutSheetState extends State<_FinishWorkoutSheet> {
     return _BottomSheetFrame(
       maxHeightFactor: 0.9,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const _SheetHandle(),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           const Text(
             'Finish Workout',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           const Text(
             'Wrap the session, attach a progress photo, and optionally publish it to your feed.',
-            style: TextStyle(color: AppColors.textSecondary, height: 1.4),
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+              height: 1.4,
+            ),
           ),
-          const SizedBox(height: 18),
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: _secondarySurfaceColor(context),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: _secondarySurfaceColor(context),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Row(
+                const Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Post to feed',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              'Share this completed workout to the All and Friends tabs.',
-                              style: TextStyle(
-                                color: AppColors.textSecondary,
-                                height: 1.35,
-                              ),
-                            ),
-                          ],
+                      Text(
+                        'Post to feed',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      CupertinoSwitch(
-                        value: _shareToFeed,
-                        onChanged: (value) {
-                          setState(() {
-                            _shareToFeed = value;
-                          });
-                        },
+                      SizedBox(height: 4),
+                      Text(
+                        'Share this completed workout to the All and Friends tabs.',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                          height: 1.35,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'Caption',
-                  style: TextStyle(
-                    color: _secondaryButtonForeground(context),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                CupertinoTextField(
-                  controller: _captionController,
-                  maxLines: 3,
-                  padding: const EdgeInsets.all(14),
-                  placeholder: _shareToFeed
-                      ? 'Say something about this session'
-                      : 'Optional workout note',
-                  placeholderStyle: const TextStyle(
-                    color: AppColors.textTertiary,
-                  ),
-                  style: TextStyle(color: _secondaryButtonForeground(context)),
-                  decoration: BoxDecoration(
-                    color: _secondarySurfaceColor(context),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Progress photo',
-                  style: TextStyle(
-                    color: _secondaryButtonForeground(context),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                if (_photoBytes != null) ...[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Image.memory(
-                      _photoBytes!,
-                      height: 180,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                _PhotoActionButtons(
-                  hasPhoto: _photoBytes != null,
-                  onCameraPressed: () => _pickImage(ImageSource.camera),
-                  onGalleryPressed: () => _pickImage(ImageSource.gallery),
-                  onRemovePressed: () {
+                const SizedBox(width: 12),
+                CupertinoSwitch(
+                  value: _shareToFeed,
+                  onChanged: (value) {
                     setState(() {
-                      _photoBytes = null;
-                      _filename = null;
-                      _contentType = null;
+                      _shareToFeed = value;
                     });
                   },
                 ),
-                if (_filename != null) ...[
-                  const SizedBox(height: 10),
-                  Text(
-                    _filename!,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
+          const SizedBox(height: 16),
+          Text(
+            'Caption',
+            style: TextStyle(
+              color: _secondaryButtonForeground(context),
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          CupertinoTextField(
+            controller: _captionController,
+            maxLines: 3,
+            padding: const EdgeInsets.all(14),
+            placeholder: _shareToFeed
+                ? 'Say something about this session'
+                : 'Optional workout note',
+            placeholderStyle: const TextStyle(color: AppColors.textTertiary),
+            style: TextStyle(
+              color: _secondaryButtonForeground(context),
+              fontSize: 14,
+            ),
+            decoration: BoxDecoration(
+              color: _secondarySurfaceColor(context),
+              borderRadius: BorderRadius.circular(18),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Progress photo',
+            style: TextStyle(
+              color: _secondaryButtonForeground(context),
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (_photoBytes != null) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Image.memory(
+                _photoBytes!,
+                height: 180,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          _PhotoActionButtons(
+            hasPhoto: _photoBytes != null,
+            onCameraPressed: () => _pickImage(ImageSource.camera),
+            onGalleryPressed: () => _pickImage(ImageSource.gallery),
+            onRemovePressed: () {
+              setState(() {
+                _photoBytes = null;
+                _filename = null;
+                _contentType = null;
+              });
+            },
+          ),
+          if (_filename != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              _filename!,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
+            ),
+          ],
           const SizedBox(height: 18),
           SizedBox(
             width: double.infinity,
@@ -1275,6 +1294,16 @@ class _BottomSheetFrame extends StatelessWidget {
     final mediaQuery = MediaQuery.of(context);
     final bottomInset = mediaQuery.viewInsets.bottom;
     final bottomSafeArea = mediaQuery.padding.bottom;
+    final size = mediaQuery.size;
+    final isCompactWidth = size.width < 390;
+    final isCompactHeight = size.height < 760;
+    final textScale = isCompactWidth
+        ? 0.92
+        : isCompactHeight
+        ? 0.96
+        : 1.0;
+    final horizontalPadding = isCompactWidth ? 14.0 : 18.0;
+    final outerMargin = size.width < 640 ? 8.0 : 0.0;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -1284,36 +1313,79 @@ class _BottomSheetFrame extends StatelessWidget {
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOut,
           padding: EdgeInsets.only(bottom: bottomInset),
-          child: Align(
-            alignment: Alignment.bottomCenter,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: 560,
-                maxHeight: mediaQuery.size.height * maxHeightFactor,
-              ),
-              child: Container(
-                width: double.infinity,
-                padding: EdgeInsets.fromLTRB(
-                  18,
-                  16,
-                  18,
-                  math.max(18, bottomSafeArea + 12),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: outerMargin),
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: 560,
+                  maxHeight: mediaQuery.size.height * maxHeightFactor,
                 ),
-                decoration: BoxDecoration(
-                  color: _sheetBackgroundColor(context),
-                  border: Border.all(color: _strokeColor(context)),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(30),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.18),
-                      blurRadius: 34,
-                      offset: const Offset(0, -8),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: _sheetBackgroundColor(context),
+                    border: Border.all(color: _strokeColor(context)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(30),
                     ),
-                  ],
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.18),
+                        blurRadius: 34,
+                        offset: const Offset(0, -10),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(30),
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          top: 0,
+                          child: IgnorePointer(
+                            child: Container(
+                              height: 72,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.white.withValues(alpha: 0.08),
+                                    Colors.transparent,
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        MediaQuery(
+                          data: mediaQuery.copyWith(
+                            textScaler: TextScaler.linear(textScale),
+                          ),
+                          child: Scrollbar(
+                            thumbVisibility: false,
+                            child: SingleChildScrollView(
+                              keyboardDismissBehavior:
+                                  ScrollViewKeyboardDismissBehavior.onDrag,
+                              padding: EdgeInsets.fromLTRB(
+                                horizontalPadding,
+                                16,
+                                horizontalPadding,
+                                math.max(18, bottomSafeArea + 12),
+                              ),
+                              child: child,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                child: child,
               ),
             ),
           ),
